@@ -34,7 +34,17 @@ export default function LoginPage() {
       if (error) throw error
       router.push("/dashboard")
     } catch (error) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      const rawMessage = error instanceof Error ? error.message : "An error occurred"
+      let friendly = rawMessage
+      const lower = rawMessage.toLowerCase()
+      if (lower.includes("invalid login") || lower.includes("invalid credentials")) {
+        friendly = "Incorrect email or password."
+      } else if (lower.includes("email not confirmed") || lower.includes("confirm your email") || lower.includes("not confirmed")) {
+        friendly = "Please confirm your email before signing in. Check your inbox for the verification link."
+      } else if (lower.includes("rate limit")) {
+        friendly = "Too many attempts. Please wait a moment and try again."
+      }
+      setError(friendly)
     } finally {
       setIsLoading(false)
     }
