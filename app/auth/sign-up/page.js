@@ -41,7 +41,7 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -54,6 +54,21 @@ export default function SignUpPage() {
         },
       })
       if (error) throw error
+      
+      // Insert the user profile data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: data.user.id,
+            full_name: fullName,
+            email: email,
+            role: role,
+            department: department,
+          }
+        ])
+      
+      if (profileError) throw profileError
       router.push("/auth/sign-up-success")
     } catch (error) {
       setError(error instanceof Error ? error.message : "An error occurred")
