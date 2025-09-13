@@ -24,14 +24,16 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login with:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          emailRedirectTo: 'https://timetable-eight-gamma.vercel.app/dashboard',
         },
       })
       if (error) throw error
+      console.log("Login successful:", data);
       router.push("/dashboard")
     } catch (error) {
       const rawMessage = error instanceof Error ? error.message : "An error occurred"
