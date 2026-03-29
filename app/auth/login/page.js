@@ -1,4 +1,4 @@
-"use client"
+ "use client"
 
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -24,17 +24,47 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
-        },
       })
       if (error) throw error
-      router.push("/dashboard")
+
+      // Get user profile to determine role
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", data.user.id)
+        .single()
+
+      if (profileError) throw profileError
+
+      // Redirect based on role
+      switch (profile.role) {
+        case "admin":
+          router.push("/admin")
+          break
+        case "faculty":
+          router.push("/faculty")
+          break
+        case "student":
+          router.push("/student")
+          break
+        default:
+          router.push("/dashboard")
+      }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      const rawMessage = error instanceof Error ? error.message : "An error occurred"
+      let friendly = rawMessage
+      const lower = rawMessage.toLowerCase()
+      if (lower.includes("invalid login") || lower.includes("invalid credentials")) {
+        friendly = "Incorrect email or password."
+      } else if (lower.includes("email not confirmed") || lower.includes("confirm your email") || lower.includes("not confirmed")) {
+        friendly = "Please confirm your email before signing in. Check your inbox for the verification link."
+      } else if (lower.includes("rate limit")) {
+        friendly = "Too many attempts. Please wait a moment and try again."
+      }
+      setError(friendly)
     } finally {
       setIsLoading(false)
     }

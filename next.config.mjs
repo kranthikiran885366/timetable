@@ -19,27 +19,30 @@ const nextConfig = {
   
   // Security headers
   async headers() {
+    const commonHeaders = [
+      {
+        key: "X-Content-Type-Options",
+        value: "nosniff",
+      },
+      {
+        key: "Referrer-Policy",
+        value: "origin-when-cross-origin",
+      },
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=()",
+      },
+    ]
+
+    // Do not block embedding in development so the Builder preview iframe works
+    const headers = process.env.NODE_ENV === "development"
+      ? commonHeaders
+      : [{ key: "X-Frame-Options", value: "SAMEORIGIN" }, ...commonHeaders]
+
     return [
       {
         source: "/(.*)",
-        headers: [
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "origin-when-cross-origin",
-          },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
-        ],
+        headers,
       },
     ]
   },
